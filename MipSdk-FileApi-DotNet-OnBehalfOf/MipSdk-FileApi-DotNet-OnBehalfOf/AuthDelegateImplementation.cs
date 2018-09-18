@@ -39,6 +39,7 @@ namespace MipSdkFileApiDotNet
         private static string clientId = ConfigurationManager.AppSettings["ida:ClientID"];
         private static string certName = ConfigurationManager.AppSettings["ida:CertName"];
         private const string TenantIdClaimType = "http://schemas.microsoft.com/identity/claims/tenantid";
+        private static string thumbprint = ConfigurationManager.AppSettings["ida:Thumbprint"];
 
         private ClaimsPrincipal _claimsPrincipal;
                 
@@ -59,7 +60,7 @@ namespace MipSdkFileApiDotNet
         public async Task<string> GetAccessTokenOnBehalfOfUser(Identity identity, string authority, string resource)
         {
             // Read X509 cert from local store and build ClientAssertionCertificate.
-            X509Certificate2 cert = Utilities.ReadCertificateFromStore(certName);
+            X509Certificate2 cert = Utilities.ReadCertificateFromStore(thumbprint);
             ClientAssertionCertificate certCred = new ClientAssertionCertificate(clientId, cert);
 
             // Store the claims identity, then read the BootstrapContext (JWT) from the identity.

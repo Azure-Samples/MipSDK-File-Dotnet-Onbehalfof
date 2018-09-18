@@ -237,6 +237,47 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="binsx64\libbz2-1.dll" />
+    <Content Include="binsx64\libffi-6.dll" />
+    <Content Include="binsx64\libgio-2.0-0.dll" />
+    <Content Include="binsx64\libglib-2.0-0.dll" />
+    <Content Include="binsx64\libgmodule-2.0-0.dll" />
+    <Content Include="binsx64\libgobject-2.0-0.dll" />
+    <Content Include="binsx64\libgsf-1-114.dll" />
+    <Content Include="binsx64\libiconv-2.dll" />
+    <Content Include="binsx64\libintl-8.dll" />
+    <Content Include="binsx64\liblzma-5.dll" />
+    <Content Include="binsx64\libpcre-1.dll" />
+    <Content Include="binsx64\libwinpthread-1.dll" />
+    <Content Include="binsx64\libxml2-2.dll" />
+    <Content Include="binsx64\mip_ClientTelemetry.dll" />
+    <Content Include="binsx64\mip_common.dll" />
+    <Content Include="binsx64\mip_file_sdk.dll" />
+    <Content Include="binsx64\mip_protection_sdk.dll" />
+    <Content Include="binsx64\mip_upe_sdk.dll" />
+    <Content Include="binsx64\sdk_wrapper_dotnet.dll" />
+    <Content Include="binsx64\zlib1.dll" />
+    <Content Include="binsx86\libbz2-1.dll" />
+    <Content Include="binsx86\libffi-6.dll" />
+    <Content Include="binsx86\libgcc_s_dw2-1.dll" />
+    <Content Include="binsx86\libgio-2.0-0.dll" />
+    <Content Include="binsx86\libglib-2.0-0.dll" />
+    <Content Include="binsx86\libgmodule-2.0-0.dll" />
+    <Content Include="binsx86\libgobject-2.0-0.dll" />
+    <Content Include="binsx86\libgsf-1-114.dll" />
+    <Content Include="binsx86\libiconv-2.dll" />
+    <Content Include="binsx86\libintl-8.dll" />
+    <Content Include="binsx86\liblzma-5.dll" />
+    <Content Include="binsx86\libpcre-1.dll" />
+    <Content Include="binsx86\libwinpthread-1.dll" />
+    <Content Include="binsx86\libxml2-2.dll" />
+    <Content Include="binsx86\mip_ClientTelemetry.dll" />
+    <Content Include="binsx86\mip_common.dll" />
+    <Content Include="binsx86\mip_file_sdk.dll" />
+    <Content Include="binsx86\mip_protection_sdk.dll" />
+    <Content Include="binsx86\mip_upe_sdk.dll" />
+    <Content Include="binsx86\sdk_wrapper_dotnet.dll" />
+    <Content Include="binsx86\zlib1.dll" />
     <Content Include="Content\bootstrap-grid.css" />
     <Content Include="Content\bootstrap-grid.min.css" />
     <Content Include="Content\bootstrap-reboot.css" />
@@ -272,6 +313,7 @@
     <Content Include="Content\bootstrap-reboot.css.map" />
     <Content Include="Content\bootstrap-grid.min.css.map" />
     <Content Include="Content\bootstrap-grid.css.map" />
+    <None Include="Properties\PublishProfiles\MipSdkIgniteDemo - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.3.1.js" />
     <Content Include="Scripts\jquery-3.3.1.min.js" />
@@ -307,6 +349,8 @@
     <Content Include="Scripts\WebForms\WebForms.js" />
     <Content Include="Scripts\WebForms\WebParts.js" />
     <Content Include="Scripts\WebForms\WebUIValidation.js" />
+    <Content Include="sdkbins\dotnet4_wrapper.dll" />
+    <Content Include="sdkbins\mip_dotnet_api.dll" />
     <Content Include="Site.Master" />
     <Content Include="ViewSwitcher.ascx" />
     <Content Include="Web.config">

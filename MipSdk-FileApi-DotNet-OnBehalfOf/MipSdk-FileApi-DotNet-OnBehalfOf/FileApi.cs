@@ -60,7 +60,7 @@ namespace MipSdkFileApiDotNet
                 _appInfo = new ApplicationInfo()
                 {
                     ApplicationId = clientId,
-                    FriendlyName = applicationName
+                    ApplicationName = applicationName
                 };
                 
                 // Initialize new AuthDelegate providing the claimsprincipal.
@@ -142,9 +142,9 @@ namespace MipSdkFileApiDotNet
             try
             {
                 if (stream != null)
-                    handler = Task.Run(async () => await _fileEngine.CreateFileHandlerAsync(stream, fileName)).Result;
+                    handler = Task.Run(async () => await _fileEngine.CreateFileHandlerAsync(stream, fileName, ContentState.Motion)).Result;
                 else
-                    handler = Task.Run(async () => await _fileEngine.CreateFileHandlerAsync(fileName)).Result;
+                    handler = Task.Run(async () => await _fileEngine.CreateFileHandlerAsync(fileName, ContentState.Motion)).Result;
 
                 return handler;
             }

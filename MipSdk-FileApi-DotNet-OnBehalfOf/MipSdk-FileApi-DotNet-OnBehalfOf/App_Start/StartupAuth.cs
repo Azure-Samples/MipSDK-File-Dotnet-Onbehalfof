@@ -48,6 +48,7 @@ namespace MipSdkFileApiDotNet
         private static string tenantId = ConfigurationManager.AppSettings["ida:TenantId"];
         private static string postLogoutRedirectUri = ConfigurationManager.AppSettings["ida:PostLogoutRedirectUri"];
         private static string certName = ConfigurationManager.AppSettings["ida:CertName"];
+        private static string thumbprint = ConfigurationManager.AppSettings["ida:Thumbprint"];
 
         private string authority = aadInstance + tenantId;
         // This is the resource ID of the AAD Graph API.  We'll need this to request a token to call the Graph API.
@@ -79,7 +80,7 @@ namespace MipSdkFileApiDotNet
                             var code = context.Code;                            
                             string signedInUserID = context.AuthenticationTicket.Identity.FindFirst(ClaimTypes.NameIdentifier).Value;
                             AuthenticationContext authContext = new AuthenticationContext(authority, new TokenCache());
-                            X509Certificate2 cert = Utilities.ReadCertificateFromStore(certName);
+                            X509Certificate2 cert = Utilities.ReadCertificateFromStore(thumbprint);
                             ClientAssertionCertificate certCred = new ClientAssertionCertificate(clientId, cert);
                                                        
                             AuthenticationResult result = authContext.AcquireTokenByAuthorizationCodeAsync(
