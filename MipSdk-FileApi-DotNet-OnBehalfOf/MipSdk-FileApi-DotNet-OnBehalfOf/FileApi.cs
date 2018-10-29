@@ -142,9 +142,9 @@ namespace MipSdkFileApiDotNet
             try
             {
                 if (stream != null)
-                    handler = Task.Run(async () => await _fileEngine.CreateFileHandlerAsync(stream, fileName, ContentState.Motion)).Result;
+                    handler = Task.Run(async () => await _fileEngine.CreateFileHandlerAsync(stream, fileName, fileName, ContentState.Motion, true)).Result;
                 else
-                    handler = Task.Run(async () => await _fileEngine.CreateFileHandlerAsync(fileName, ContentState.Motion)).Result;
+                    handler = Task.Run(async () => await _fileEngine.CreateFileHandlerAsync(fileName, fileName, ContentState.Motion, true)).Result;
 
                 return handler;
             }
