@@ -185,14 +185,14 @@ The web.config file must be updated to store several identity and application-sp
 | Key                       | Value or Value Location                                                                                       |
 |---------------------------|---------------------------------------------------------------------------------------------------------------|
 | **ida:ClientId**              | Azure AD App Registration Portal - [Detailed here](#app-registration): Copy the Application ID                                                                            |
-| ida:AADInstance           | https://login.microsoftonline.com                                                                             |
-| **ida:Domain **               | Domain of AAD Tenant - e.g. Contoso.Onmicrosoft.com                                                                                         |
+| **ida:AADInstance**           | https://login.microsoftonline.com                                                                             |
+| **ida:Domain**               | Domain of AAD Tenant - e.g. Contoso.Onmicrosoft.com                                                                                         |
 | **ida:TenantId**              | [AAD Properties Blade](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/Properties) - Directory ID |
-| ida:PostLogoutRedirectUri | Set to site root (https://localhost:44376 in sample), and set in **App Registration->Settings->Logout URL**                                                        |
-| ida:CertName              | CN=MipSdkFileApiDotNetCert                                                                                           |
-| ida:Thumbprint            | Thumbprint of the certificate generated above.
-| MipData                   | App_Data\mip_data                                                                                             |
-| DataEndpoint              | Any public web service to load data for GridView.                                                             |
+| **ida:PostLogoutRedirectUri** | Set to site root (https://localhost:44376 in sample), and set in **App Registration->Settings->Logout URL**                                                        |
+| **ida:CertName**              | CN=MipSdkFileApiDotNetCert                                                                                           |
+| **ida:Thumbprint**           | Thumbprint of the certificate generated above.
+| **MipData**                   | App_Data\mip_data                                                                                             |
+| **DataEndpoint**              | Any public web service to load data for GridView.                                                             |
 
 #### Update IdentityConfiguration
 
@@ -200,8 +200,8 @@ To save the bootstrap context token for the on behalf of authentication flow, th
 
 Skipping this step will result in the on-behalf-of flow failing in later steps.
 
-1. In web.config find `<!-- TODO: Enable identityConfiguration saveBootstrapContext -->`
-2. Copy and paste the XML below in to the web.config, or uncomment the existing block.
+1. In web.config find `saveBootstrapContext`
+2. Ensure that the value is set to **true**.
 
 ```xml
 <system.identityModel>
