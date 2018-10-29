@@ -44,7 +44,7 @@ The application leverages an on-behalf-of authentication flow. The service will 
 2. Create a new folder `mkdir c:\samples`
 3. Navigate to the new folder using `cd c:\samples`
 4. Clone the repository by running `git clone https://github.com/azure-samples/MipSdk-Fileapi-DotNet-OnBehalfOf`
-5. In explorer, navigate to *c:\samples\Ignite-HOL-4000\MipSdk-FileApi-DotNet-OnBehalfOf* and open the MipSdk-FileApi-DotNet-OnBehalfOf.sln in Visual Studio 2017.
+5. In explorer, navigate to *c:\samples\MipSdk-FileApi-DotNet-OnBehalfOf* and open the MipSdk-FileApi-DotNet-OnBehalfOf.sln in Visual Studio 2017.
 
 ## Download the MIP SDK DotNet Wrapper Binaries
 
