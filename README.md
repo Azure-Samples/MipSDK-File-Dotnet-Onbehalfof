@@ -405,8 +405,8 @@ Test the application by:
 - Clicking a label to apply
 - Clicking the download button
 - Opening the Excel file and observe that the file is labeled.
-  - The AIPv2 Preview Client is required to display labels natively.
-  - To see the labels without AIPv2 preview client, click **File->Info->Properties->Advanced Properties->Custom**
+  - The [AIP Unified Labeling Preview Client](https://www.microsoft.com/en-us/download/details.aspx?id=57440) is required to display labels natively.
+  - To see the labels without preview client, click **File->Info->Properties->Advanced Properties->Custom**
   - If the label applies protection, the yellow protection banner will also be displayed.
 
 ## Troubleshooting
