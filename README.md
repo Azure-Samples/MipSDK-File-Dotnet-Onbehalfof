@@ -21,7 +21,7 @@ Authentication in the sample is implemented via bearer token and an on-behalf-of
 - The application stores their JSON web token.
 - The service, using certificate based auth, obtains a new token, on behalf of the user, for use against the backend policy and protection services.
 
-The sample has already implemented all of the MVC and MIP SDK specific controls. While going through the sample, you'll perform the following tasks:
+The sample has already implemented all of the UI and MIP SDK specific controls. While going through the sample, you'll perform the following tasks:
 
 - Register the application in Azure Active Directory and configure certificate based authentication
 - Update the web.config authentication settings
@@ -249,7 +249,7 @@ The MIP SDK exposes a class called `Microsoft.InformationProtection.AuthDelegate
 
 To implement the authentication delegate, we create a new class, inheriting `Microsoft.InformationProtection.IAuthDelegate` and implement the `AcquireToken` function.
 
-The sample leverages ADAL as part of the MVC application. Specifically, the service will use certificate based authentication to perform operations on behalf of the user against the MIP endpoints. **Certificate based authentication is required to use the MIP policy endpoints.**
+The sample leverages ADAL as part of the ASP.NET application. Specifically, the service will use certificate based authentication to perform operations on behalf of the user against the MIP endpoints. **Certificate based authentication is required to use the MIP policy endpoints.**
 
 1. Open **AuthDelegateImplementation.cs**
 2. Find `public string AcquireToken()`
