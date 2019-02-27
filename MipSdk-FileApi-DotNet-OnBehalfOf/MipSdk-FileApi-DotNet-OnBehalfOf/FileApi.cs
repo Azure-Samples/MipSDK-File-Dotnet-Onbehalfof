@@ -36,12 +36,11 @@ namespace MipSdkFileApiDotNet
     {
 
         // This is the location used to store MIP SDK state information and logs.
-        private static string mipData = ConfigurationManager.AppSettings["MipData"];
-        private string mipPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, mipData);
-
-        internal static readonly FileProfileFactory FileProfileFactory = new FileProfileFactory();
+        private static readonly string mipData = ConfigurationManager.AppSettings["MipData"];
+        private readonly string mipPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, mipData);
+        
         private readonly ApplicationInfo _appInfo;        
-        private AuthDelegateImplementation _authDelegate;
+        private readonly AuthDelegateImplementation _authDelegate;
 
         private IFileProfile _fileProfile;
         private IFileEngine _fileEngine;
@@ -52,7 +51,7 @@ namespace MipSdkFileApiDotNet
         /// <param name="clientId">Client is the Application ID displayed in the Azure AD App Registration Portal</param>
         /// <param name="applicationName">The application friendly name</param>
         /// <param name="claimsPrincipal">ClaimsPrincipal representing the authenticated user</param>
-        public FileApi(string clientId, string applicationName, ClaimsPrincipal claimsPrincipal)
+        public FileApi(string clientId, string applicationName, string applicationVersion, ClaimsPrincipal claimsPrincipal)
         {
             try
             {
@@ -60,7 +59,8 @@ namespace MipSdkFileApiDotNet
                 _appInfo = new ApplicationInfo()
                 {
                     ApplicationId = clientId,
-                    ApplicationName = applicationName
+                    ApplicationName = applicationName, 
+                    ApplicationVersion = applicationVersion
                 };
                 
                 // Initialize new AuthDelegate providing the claimsprincipal.
@@ -68,14 +68,10 @@ namespace MipSdkFileApiDotNet
 
                 // Set path to bins folder.
                 var path = Path.Combine(
-                        Directory.GetParent(Path.GetDirectoryName(new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).LocalPath)).FullName,
-                        Environment.Is64BitProcess ? "binsx64" : "binsx86");
-
-                // Use custom UnsafeKernel32NativeMethods class to configure managed to unmanaged marshalling.
-                Utilities.UnsafeKernel32NativeMethods.SetDllDirectory(path);
+                        Directory.GetParent(Path.GetDirectoryName(new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).LocalPath)).FullName, "bin");                        
                 
-                // Initialize FileProfileFactory.
-                FileProfileFactory.Initialize();
+                // Initialize MIP for File API. Provide the path to the BIN folder. The NuGet package will copy the architecture specific libraries here. 
+                MIP.Initialize(MipComponent.File, path);
 
                 // Call CreateFileProfile. Result is stored in global.
                 CreateFileProfile();
@@ -98,7 +94,7 @@ namespace MipSdkFileApiDotNet
             try
             {                
                 var profileSettings = new FileProfileSettings(mipPath, false, _authDelegate, new ConsentDelegateImplementation(), _appInfo, LogLevel.Trace);
-                _fileProfile = Task.Run(async () => await new FileProfileFactory().LoadAsync(profileSettings)).Result;
+                _fileProfile = Task.Run(async () => await MIP.LoadFileProfileAsync(profileSettings)).Result;
             }
 
             catch (Exception ex)
@@ -118,8 +114,12 @@ namespace MipSdkFileApiDotNet
         {
             try
             {
-                var engineSettings = new FileEngineSettings(username, clientData, locale);
-                engineSettings.ProtectionCloudEndpointBaseUrl = "https://api.aadrm.com";
+                Identity id = new Identity(username);
+                var engineSettings = new FileEngineSettings(username, clientData, locale)
+                {
+                   Identity = id
+                };
+                
                 _fileEngine = Task.Run(async () => await _fileProfile.AddEngineAsync(engineSettings)).Result;                
             }
 
@@ -198,6 +198,14 @@ namespace MipSdkFileApiDotNet
                 // Call CommitAsync to write result to output stream. 
                 // Returns a bool to indicate true or false.
                 var result = Task.Run(async () => await handler.CommitAsync(outputStream)).Result;
+                
+                if(result)
+                {
+                    // Submit an audit event if the change was successful.
+                    handler.NotifyCommitSuccessful(fileName);
+                }
+
+
                 return result;
             }
 
@@ -215,7 +223,7 @@ namespace MipSdkFileApiDotNet
         {
             try
             {
-                var labels = _fileEngine.ListSensitivityLabels();
+                var labels = _fileEngine.SensitivityLabels;
                 var returnLabels = new List<Models.Label>();
 
                 foreach (var label in labels)

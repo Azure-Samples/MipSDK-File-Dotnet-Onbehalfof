@@ -99,7 +99,7 @@ namespace MipSdkFileApiDotNet
             }
         }
 
-        protected void treeViewLabels_SelectedNodeChanged(object sender, EventArgs e)
+        protected void TreeViewLabels_SelectedNodeChanged(object sender, EventArgs e)
         {
             labelSelectedLabel.Text = "";
 
@@ -114,6 +114,7 @@ namespace MipSdkFileApiDotNet
         protected void ButtonDownload_Click(object sender, EventArgs e)
         {            
             string FileName = "MyAppOutput.xlsx";
+            string templateFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Template.xlsx");            
 
             if (treeViewLabels.SelectedNode == null)
             {
@@ -122,27 +123,31 @@ namespace MipSdkFileApiDotNet
             }
 
             // Using EPPlus, generate a spreadsheet using the data from the web service.
+            // Reads a template from app_data. This is a bit of a hack as I had trouble making it work from a new stream.
             MemoryStream excelStream = new MemoryStream();
-            using (var Excel = new ExcelPackage(excelStream))
+            using (var Excel = new ExcelPackage(new FileInfo(templateFile)))
             {
-                var Worksheet = Excel.Workbook.Worksheets.Add("MyData");                
-                Worksheet.Cells["A1"].LoadFromCollection(data, true, OfficeOpenXml.Table.TableStyles.Dark10);
-                Excel.Save();
+                var Worksheet = Excel.Workbook.Worksheets.Add("MyData");
+                Excel.Workbook.Worksheets.Delete("Sheet1");
+                Worksheet.Cells["A1"].LoadFromCollection(data, true, OfficeOpenXml.Table.TableStyles.Dark10);                
+                Excel.SaveAs(excelStream);
             }
 
+                            
             using (var outputStream = new MemoryStream())
             {
+                // Pass in Excel stream to ApplyLabel, return result on outputStream and write reponse to client
                 bool result = labelController.ApplyLabel(excelStream, FileName, treeViewLabels.SelectedValue, outputStream);
-
+                
                 if (result)
                 {
                     HttpResponse Response = HttpContext.Current.Response;
-                    Response.ContentType = "application/vnd.ms-excel";
-                    Response.AddHeader("Content-Disposition", "attachment; filename=" + FileName +";");
+                    Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    Response.AddHeader("Content-Disposition", "attachment; filename=" + FileName + ";");
                     Response.BinaryWrite(outputStream.ToArray());
                     Response.Flush();
                     Response.End();
-                }
+                }                
             }
         }
     }

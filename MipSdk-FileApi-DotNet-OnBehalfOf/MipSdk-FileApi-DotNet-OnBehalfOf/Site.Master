@@ -45,7 +45,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a id="A1" class="navbar-brand" runat="server" href="~/">Ignite HOL 4000</a>
+                    <a id="A1" class="navbar-brand" runat="server" href="~/">MIP SDK ASP.NET Sample</a>
                 </div>
                 <div class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
@@ -78,7 +78,7 @@
             </asp:ContentPlaceHolder>
             <hr />
             <footer>
-                <p>&copy; <%: DateTime.Now.Year %> - Ignite HOL 4000 - MIP SDK Hands on!</p>
+                <p>&copy; <%: DateTime.Now.Year %> - MIP SDK ASP.NET Sample</p>
             </footer>
         </div>
     </form>

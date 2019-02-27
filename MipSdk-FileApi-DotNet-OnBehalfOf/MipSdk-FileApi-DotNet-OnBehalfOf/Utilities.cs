@@ -64,13 +64,6 @@ namespace MipSdkFileApiDotNet
             }
 
             return value;
-        }
-
-        internal static class UnsafeKernel32NativeMethods
-        {
-            [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode,
-                CallingConvention = CallingConvention.StdCall)]
-            internal static extern bool SetDllDirectory([In] [MarshalAs(UnmanagedType.LPWStr)] string lpPathName);
-        }
+        }       
     }
 }

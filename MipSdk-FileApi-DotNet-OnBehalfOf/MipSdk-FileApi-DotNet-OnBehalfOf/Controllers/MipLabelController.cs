@@ -39,12 +39,13 @@ namespace MipSdkFileApiDotNet.Controllers
     {
         private static string clientId = ConfigurationManager.AppSettings["ida:ClientID"];        
         private static string appName = ConfigurationManager.AppSettings["ApplicationName"];
+        private static string appVersion = ConfigurationManager.AppSettings["ApplicationVersion"];
         private FileApi _fileApi;
 
         // Initialize FileApi.
         public MipLabelController()
         {            
-            _fileApi = new FileApi(clientId, appName, ClaimsPrincipal.Current);
+            _fileApi = new FileApi(clientId, appName, appVersion, ClaimsPrincipal.Current);
         }
 
         /// <summary>
