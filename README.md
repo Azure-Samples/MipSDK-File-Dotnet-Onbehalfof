@@ -21,7 +21,7 @@ Authentication in the sample is implemented via bearer token and an on-behalf-of
 - The application stores their JSON web token.
 - The service, using certificate based auth, obtains a new token, on behalf of the user, for use against the backend policy and protection services.
 
-The sample has already implemented all of the MVC and MIP SDK specific controls. While going through the sample, you'll perform the following tasks:
+The sample has already implemented all of the UI and MIP SDK specific controls. While going through the sample, you'll perform the following tasks:
 
 - Register the application in Azure Active Directory and configure certificate based authentication
 - Update the web.config authentication settings
@@ -185,14 +185,14 @@ The web.config file must be updated to store several identity and application-sp
 | Key                       | Value or Value Location                                                                                       |
 |---------------------------|---------------------------------------------------------------------------------------------------------------|
 | **ida:ClientId**              | Azure AD App Registration Portal - [Detailed here](#app-registration): Copy the Application ID                                                                            |
-| ida:AADInstance           | https://login.microsoftonline.com                                                                             |
-| **ida:Domain **               | Domain of AAD Tenant - e.g. Contoso.Onmicrosoft.com                                                                                         |
+| **ida:AADInstance**           | https://login.microsoftonline.com                                                                             |
+| **ida:Domain**               | Domain of AAD Tenant - e.g. Contoso.Onmicrosoft.com                                                                                         |
 | **ida:TenantId**              | [AAD Properties Blade](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/Properties) - Directory ID |
-| ida:PostLogoutRedirectUri | Set to site root (https://localhost:44376 in sample), and set in **App Registration->Settings->Logout URL**                                                        |
-| ida:CertName              | CN=MipSdkFileApiDotNetCert                                                                                           |
-| ida:Thumbprint            | Thumbprint of the certificate generated above.
-| MipData                   | App_Data\mip_data                                                                                             |
-| DataEndpoint              | Any public web service to load data for GridView.                                                             |
+| **ida:PostLogoutRedirectUri** | Set to site root (https://localhost:44376 in sample), and set in **App Registration->Settings->Logout URL**                                                        |
+| **ida:CertName**              | CN=MipSdkFileApiDotNetCert                                                                                           |
+| **ida:Thumbprint**           | Thumbprint of the certificate generated above.
+| **MipData**                   | App_Data\mip_data                                                                                             |
+| **DataEndpoint**              | Any public web service to load data for GridView.                                                             |
 
 #### Update IdentityConfiguration
 
@@ -200,8 +200,8 @@ To save the bootstrap context token for the on behalf of authentication flow, th
 
 Skipping this step will result in the on-behalf-of flow failing in later steps.
 
-1. In web.config find `<!-- TODO: Enable identityConfiguration saveBootstrapContext -->`
-2. Copy and paste the XML below in to the web.config, or uncomment the existing block.
+1. In web.config find `saveBootstrapContext`
+2. Ensure that the value is set to **true**.
 
 ```xml
 <system.identityModel>
@@ -219,7 +219,7 @@ The MIP SDK exposes a class called `Microsoft.InformationProtection.AuthDelegate
 
 To implement the authentication delegate, we create a new class, inheriting `Microsoft.InformationProtection.IAuthDelegate` and implement the `AcquireToken` function.
 
-The sample leverages ADAL as part of the MVC application. Specifically, the service will use certificate based authentication to perform operations on behalf of the user against the MIP endpoints. **Certificate based authentication is required to use the MIP policy endpoints.**
+The sample leverages ADAL as part of the ASP.NET application. Specifically, the service will use certificate based authentication to perform operations on behalf of the user against the MIP endpoints. **Certificate based authentication is required to use the MIP policy endpoints.**
 
 1. Open **AuthDelegateImplementation.cs**
 2. Find `public string AcquireToken()`
@@ -341,7 +341,7 @@ Finally, an audit event can be generated by notifying that the commit was a succ
 }
 ```
 
-## Review MipController.cs
+# Review MipController.cs
 
 MipController is the interface between the user interfaces and the service/data components. The `MipController` constructor initializes `FileApi _fileApi`. This is an object of the custom `FileApi` class implemented above.
 
@@ -385,8 +385,8 @@ Test the application by:
 - Clicking a label to apply
 - Clicking the download button
 - Opening the Excel file and observe that the file is labeled.
-  - The AIPv2 Preview Client is required to display labels natively.
-  - To see the labels without AIPv2 preview client, click **File->Info->Properties->Advanced Properties->Custom**
+  - The [AIP Unified Labeling Preview Client](https://www.microsoft.com/en-us/download/details.aspx?id=57440) is required to display labels natively.
+  - To see the labels without preview client, click **File->Info->Properties->Advanced Properties->Custom**
   - If the label applies protection, the yellow protection banner will also be displayed.
 
 ## Troubleshooting
