@@ -46,11 +46,11 @@ The application leverages an on-behalf-of authentication flow. The service will 
 4. Clone the repository by running `git clone https://github.com/azure-samples/MipSdk-Fileapi-DotNet-OnBehalfOf`
 5. In explorer, navigate to *c:\samples\MipSdk-FileApi-DotNet-OnBehalfOf* and open the MipSdk-FileApi-DotNet-OnBehalfOf.sln in Visual Studio 2017.
 
-## Download the MIP SDK DotNet Wrapper Binaries
+## Add the NuGet Package
 
-1. In a browser, navigate to https://aka.ms/MipSdkBins
-2. Download the mipsdk_dotnet_1.0.xx-beta.zip file and extract
-3. Note the folder locations for later.
+1. In Visual Studio, right click the MipSdkFileApiDotNet project.
+2. Click **Manage NuGet Packages**
+3. In the **Browse** tab, search for *Microsoft.Information.Protection.File* and install.
 
 ## Authentication
 
@@ -150,7 +150,7 @@ When complete, the section should be similar to this:
     ],
 ```
 
-### Install NuGet Packages
+### Install Additional NuGet Packages
 
 The required NuGet packages must be restored. To restore the packages:
 
@@ -211,36 +211,6 @@ Skipping this step will result in the on-behalf-of flow failing in later steps.
 
 3. Save the changes to web.config.
 
-## Review Utilities Class
-
-The project includes a utilities class for a few functions used throughout the project. Two of the three required methods are already in place. The last is required to enable marshalling between the managed C# libraries and the unmanaged C++ libraries.
-
-1. In the Visual Studio project, open **Utilties.cs**
-2. Find `internal static class UnsafeKernel32NativeMethods`
-3. Review the function.
-
-## Adding the MIP Components
-
-In the following steps, the components necessary to use the MIP SDK will be added to the project. This includes the unmanaged C++ DLLs, the managed wrappers, and the wrapper code.
-
-### Add the MIP SDK Binaries to the Project
-
-Using the MIP SDK for C# requires two components:
-
-- The MIP SDK File API for Windows
-- The MIP SDK C# Wrapper
-
-1. In Explorer, navigate to the folder where the SDK ZIP files were extracted [in this step](#download-the-mip-sdk-dotnet-wrapper-binaries).
-2. In Visual Studio, right click the MipSdkFileApiDotNet project and click **Open Folder in File Explorer**
-3. Create two new folders in the project folder **binsX86** and **binsX64**
-4. Navigate to the *bins\amd64* folder and copy all DLLs from **amd64** to the **binsx64** folder created above.
-5. Navigate to the *bins\x86* folder and copy all DLLs from **amd64** to the **binsx86** folder created above.
-6. Navigate to the *bins* folder. Copy the two DLLs, **dotnet4_wrapper.dll** and **mip_dotnet_api.dll** to the project root folder.
-7. Right click the project in Visual Studio and then **Add** followed by **Reference**. Click **Browse** and locate both **dotnet4_wrapper.dll** and **mip_dotnet_api.dll**.
-8. Click **OK**
-
-When complete, the binsX86 and binsx64 folders should each contain 20 DLLs. The sdkbins folder will contain two DLLs.
-
 **At this point the application should build and run. Read on to learn more about the details of the sample.** [Jump here](#build) to see the test steps.
 
 ### The Auth Delegate
@@ -296,7 +266,7 @@ The `Profile`, whether policy, file, or protection, is the base class for all SD
 
 The `IFileProfile` is created by first initializing some profile settings. `FileProfileSettings` describes the storage location for MIP SDK state storage, whether to use in memory storage, the auth and consent delegates, `ApplicationInfo`, and the logging level.
 
-The settings object is passed in to the FileProfileFactory's LoadAsync method, which returns an object of IFileProfile.
+The settings object is passed in to the `MIP.LoadFileProfileAsync()` method, which returns an object of IFileProfile.
 
 ### Review CreateFileEngine()
 
@@ -315,14 +285,14 @@ The method tries to create a new `FileEngineSettings` object, then uses that obj
 
 ### Review ListLabels()
 
-The first action typically implemented with `FileEngine` is to `ListSensitivityLabels()`. This function returns a list of all sensitivity labels defined by the organization. Labels which are out of scope for the user will be set to `Enabled = false`. It's important that your application understands the concept of enabled versus disabled labels. Enabled labels are displayed to a user and selectable; disabled labels are used only to read the label metadata.
+The first action typically implemented with `IFileEngine` is to fetch the available labels. The `IFileEngine` has a property called `SensitivityLabels` that returns a list of all sensitivity labels defined by the organization. Labels which are out of scope for the user will be set to `Enabled = false`. It's important that your application understands the concept of enabled versus disabled labels. Enabled labels are displayed to a user and selectable; disabled labels are used only to read the label metadata.
 
-The sample below calls `IFileEngine.ListSensitivityLabels()` on the stores the result in a `List<Models.Label>` collection. It iterates through the list of labels and child labels, then stores in the `List<Models.Label>` collection.
+The sample below reads `IFileEngine.SensitivityLabels` and stores the result in a `List<Models.Label>` collection. It iterates through the list of labels and child labels, then stores in the `List<Models.Label>` collection.
 
-> The code to read the labels and put in the `List<>` is already implemented. The only step here is to implement the call to `IFileEngine.ListSensitivityLabels()`.
+> The code to read the labels and put in the `List<>` is already implemented. The only step here is to implement the call to `IFileEngine.SensitivityLabels`.
 
 1. In **FileApi.cs**, locate `ListLabels()`
-2. Review the implementation. Note that getting the labels is as easy as `_fileEngine.ListSensitivityLabels();`
+2. Review the implementation. Note that getting the labels is as easy as `_fileEngine.SensitivityLabels;`
 
 ### Review CreateFileHandler()
 
@@ -359,6 +329,16 @@ LabelingOptions labelingOptions = new LabelingOptions()
     AssignmentMethod = AssignmentMethod.Standard,
     ExtendedProperties = new List<KeyValuePair<string, string>>()
 };
+```
+
+Finally, an audit event can be generated by notifying that the commit was a success:
+
+```csharp
+ if(result)
+{
+  // Submit an audit event if the change was successful.
+  handler.NotifyCommitSuccessful(fileName);
+}
 ```
 
 ## Review MipController.cs
@@ -419,4 +399,4 @@ Authentication code modeled/copied primarily from the [Active Directory DotNet W
 
 Excel output generated by [EPPlus](https://www.nuget.org/packages/EPPlus).
 
-JSON deserialization provided by [Json.NET](https://www.nuget.org/packages/Newtonsoft.Json/)
+JSON de/serialization provided by [Json.NET](https://www.nuget.org/packages/Newtonsoft.Json/)

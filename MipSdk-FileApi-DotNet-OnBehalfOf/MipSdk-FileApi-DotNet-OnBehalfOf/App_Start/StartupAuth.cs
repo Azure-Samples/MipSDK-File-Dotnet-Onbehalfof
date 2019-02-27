@@ -46,8 +46,7 @@ namespace MipSdkFileApiDotNet
         private static string appKey = ConfigurationManager.AppSettings["ida:ClientSecret"];
         private static string aadInstance = Utilities.EnsureTrailingSlash(ConfigurationManager.AppSettings["ida:AADInstance"]);
         private static string tenantId = ConfigurationManager.AppSettings["ida:TenantId"];
-        private static string postLogoutRedirectUri = ConfigurationManager.AppSettings["ida:PostLogoutRedirectUri"];
-        private static string certName = ConfigurationManager.AppSettings["ida:CertName"];
+        private static string postLogoutRedirectUri = ConfigurationManager.AppSettings["ida:PostLogoutRedirectUri"];        
         private static string thumbprint = ConfigurationManager.AppSettings["ida:Thumbprint"];
 
         private string authority = aadInstance + tenantId;
