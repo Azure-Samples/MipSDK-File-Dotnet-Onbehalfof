@@ -50,7 +50,7 @@ The application leverages an on-behalf-of authentication flow. The service will 
 
 1. In Visual Studio, right click the MipSdkFileApiDotNet project.
 2. Click **Manage NuGet Packages**
-3. In the **Browse** tab, search for *Microsoft.Information.Protection.File* and install.
+3. In the **Browse** tab, search for *Microsoft.InformationProtection.File* and install.
 
 ## Authentication
 
