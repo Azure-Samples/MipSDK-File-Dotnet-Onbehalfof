@@ -44,7 +44,7 @@ namespace MipSdkFileApiDotNet
 
         private IFileProfile _fileProfile;
         private IFileEngine _fileEngine;
-        
+
         /// <summary>
         /// Constructor FileApi object using clientId (from Azure AD), application friendly name, and ClaimsPrincipal representing the user
         /// </summary>
@@ -53,37 +53,30 @@ namespace MipSdkFileApiDotNet
         /// <param name="claimsPrincipal">ClaimsPrincipal representing the authenticated user</param>
         public FileApi(string clientId, string applicationName, string applicationVersion, ClaimsPrincipal claimsPrincipal)
         {
-            try
+            // Store ApplicationInfo and ClaimsPrincipal for SDK operations.
+            _appInfo = new ApplicationInfo()
             {
-                // Store ApplicationInfo and ClaimsPrincipal for SDK operations.
-                _appInfo = new ApplicationInfo()
-                {
-                    ApplicationId = clientId,
-                    ApplicationName = applicationName, 
-                    ApplicationVersion = applicationVersion
-                };
-                
-                // Initialize new AuthDelegate providing the claimsprincipal.
-                _authDelegate = new AuthDelegateImplementation(claimsPrincipal);
+                ApplicationId = clientId,
+                ApplicationName = applicationName,
+                ApplicationVersion = applicationVersion
+            };
 
-                // Set path to bins folder.
-                var path = Path.Combine(
-                        Directory.GetParent(Path.GetDirectoryName(new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).LocalPath)).FullName, "bin");                        
-                
-                // Initialize MIP for File API. Provide the path to the BIN folder. The NuGet package will copy the architecture specific libraries here. 
-                MIP.Initialize(MipComponent.File, path);
+            // Initialize new AuthDelegate providing the claimsprincipal.
+            _authDelegate = new AuthDelegateImplementation(claimsPrincipal);
 
-                // Call CreateFileProfile. Result is stored in global.
-                CreateFileProfile();
+            // Set path to bins folder.
+            var path = Path.Combine(
+                  Directory.GetParent(Path.GetDirectoryName(new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase).LocalPath)).FullName,
+                   Environment.Is64BitProcess ? "bin\\x64" : "bin\\x86");
 
-                // Call CreateFileEngine, providing the user UPN, null client data, and locale.
-                CreateFileEngine(ClaimsPrincipal.Current.FindFirst(ClaimTypes.Upn).Value, "", "en-US");
-            }
+            // Initialize MIP for File API.  
+            MIP.Initialize(MipComponent.File, path);
 
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+            // Call CreateFileProfile. Result is stored in global.
+            CreateFileProfile();
+
+            // Call CreateFileEngine, providing the user UPN, null client data, and locale.
+            CreateFileEngine(ClaimsPrincipal.Current.FindFirst(ClaimTypes.Upn).Value, "", "en-US");
         }
 
         /// <summary>

@@ -4,7 +4,7 @@
 
     <div class="jumbotron">
         <h1>MIP SDK .NET Sample!</h1>
-        <p class="lead">The Microsoft Information Protection SDK enables Microsoft customers to label and protect information, no matter where its born.</p>
+        <p class="lead">The Microsoft Information Protection SDK enables Microsoft customers to label and protect information, no matter where it's born.</p>
         <p><a href="https://aka.ms/mipsdk" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
     </div>
 
