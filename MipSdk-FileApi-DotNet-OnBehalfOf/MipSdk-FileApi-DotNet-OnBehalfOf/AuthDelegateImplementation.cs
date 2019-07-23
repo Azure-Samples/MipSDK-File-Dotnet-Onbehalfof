@@ -30,6 +30,8 @@ using System.Threading.Tasks;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.InformationProtection;
 using MipSdkFileApiDotNet.Models;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Information;
+using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 
 namespace MipSdkFileApiDotNet
 {
@@ -40,6 +42,9 @@ namespace MipSdkFileApiDotNet
         private static readonly string clientId = ConfigurationManager.AppSettings["ida:ClientID"];
         private const string TenantIdClaimType = "http://schemas.microsoft.com/identity/claims/tenantid";
         private static readonly string thumbprint = ConfigurationManager.AppSettings["ida:Thumbprint"];
+        private static readonly bool doCertAuth = Convert.ToBoolean(ConfigurationManager.AppSettings["ida:DoCertAuth"]);
+        private static readonly string clientSecret = ConfigurationManager.AppSettings["ida:ClientSecret"];
+
 
         private ClaimsPrincipal _claimsPrincipal;
                 
@@ -48,7 +53,7 @@ namespace MipSdkFileApiDotNet
             _claimsPrincipal = claimsPrincipal;
         }
 
-        public string AcquireToken(Identity identity, string authority, string resource)
+        public string AcquireToken(Identity identity, string authority, string resource, string claim)
         {            
             //Call method to get access token, providing the identity, authority, and resource.
             //Uses the claims principal provided to the contructor to get the bootstrap context
@@ -59,21 +64,41 @@ namespace MipSdkFileApiDotNet
 
         public async Task<string> GetAccessTokenOnBehalfOfUser(string authority, string resource)
         {
-            // Read X509 cert from local store and build ClientAssertionCertificate.
-            X509Certificate2 cert = Utilities.ReadCertificateFromStore(thumbprint);
-            ClientAssertionCertificate certCred = new ClientAssertionCertificate(clientId, cert);
+            AuthenticationResult result = null;
+             
+            if (doCertAuth)
+            {
+                // Read X509 cert from local store and build ClientAssertionCertificate.
+                X509Certificate2 cert = Utilities.ReadCertificateFromStore(thumbprint);
+                ClientAssertionCertificate certCred = new ClientAssertionCertificate(clientId, cert);
 
-            // Store the claims identity, then read the BootstrapContext (JWT) from the identity.
-            var ci = (ClaimsIdentity)_claimsPrincipal.Identity;
-            string userAccessToken = (string)ci.BootstrapContext;
+                // Store the claims identity, then read the BootstrapContext (JWT) from the identity.
+                var ci = (ClaimsIdentity)_claimsPrincipal.Identity;
+                string userAccessToken = (string)ci.BootstrapContext;
 
-            // Read the UserPrincipalName from the claim, then generate a user assertion with the UPN and access token.
-            string userName = _claimsPrincipal.FindFirst(ClaimTypes.Upn).Value;
-            UserAssertion userAssertion = new UserAssertion(userAccessToken, "urn:ietf:params:oauth:grant-type:jwt-bearer", userName);
+                // Read the UserPrincipalName from the claim, then generate a user assertion with the UPN and access token.
+                string userName = _claimsPrincipal.FindFirst(ClaimTypes.Upn).Value;
+                UserAssertion userAssertion = new UserAssertion(userAccessToken, "urn:ietf:params:oauth:grant-type:jwt-bearer", userName);
 
-            // Build a new AuthContext, then use the certificate credentials + the user assertion to acquire a token for the provided resource. 
-            var authContext = new Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(authority, new TokenCache());
-            var result = await authContext.AcquireTokenAsync(resource, certCred, userAssertion);
+                // Build a new AuthContext, then use the certificate credentials + the user assertion to acquire a token for the provided resource. 
+                var authContext = new Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(authority, new TokenCache());
+                result = await authContext.AcquireTokenAsync(resource, certCred, userAssertion);
+            }
+
+            else
+            {
+                var ci = (ClaimsIdentity)_claimsPrincipal.Identity;
+                string userAccessToken = (string)ci.BootstrapContext;
+
+                ClientCredential clientCred = new ClientCredential(clientId, clientSecret);
+
+                // Read the UserPrincipalName from the claim, then generate a user assertion with the UPN and access token.
+                string userName = _claimsPrincipal.FindFirst(ClaimTypes.Upn).Value;
+                UserAssertion userAssertion = new UserAssertion(userAccessToken, "urn:ietf:params:oauth:grant-type:jwt-bearer", userName);
+                var authContext = new AuthenticationContext(authority, new TokenCache());
+                result = await authContext.AcquireTokenAsync(resource, clientCred, userAssertion);
+            }
+
 
             // Return the token to the API caller
             return (result.AccessToken);
