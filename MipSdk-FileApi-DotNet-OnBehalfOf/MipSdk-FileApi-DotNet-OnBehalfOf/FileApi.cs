@@ -29,6 +29,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.InformationProtection;
 using Microsoft.InformationProtection.File;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
 
 namespace MipSdkFileApiDotNet
 {
@@ -39,11 +40,12 @@ namespace MipSdkFileApiDotNet
         private static readonly string mipData = ConfigurationManager.AppSettings["MipData"];
         private readonly string mipPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, mipData);
         
-        private readonly ApplicationInfo _appInfo;        
+        private readonly ApplicationInfo appInfo;        
         private readonly AuthDelegateImplementation _authDelegate;
 
-        private IFileProfile _fileProfile;
-        private IFileEngine _fileEngine;
+        private IFileProfile fileProfile;
+        private IFileEngine fileEngine;
+        private MipContext mipContext;
 
         /// <summary>
         /// Constructor FileApi object using clientId (from Azure AD), application friendly name, and ClaimsPrincipal representing the user
@@ -54,7 +56,7 @@ namespace MipSdkFileApiDotNet
         public FileApi(string clientId, string applicationName, string applicationVersion, ClaimsPrincipal claimsPrincipal)
         {
             // Store ApplicationInfo and ClaimsPrincipal for SDK operations.
-            _appInfo = new ApplicationInfo()
+            appInfo = new ApplicationInfo()
             {
                 ApplicationId = clientId,
                 ApplicationName = applicationName,
@@ -79,15 +81,23 @@ namespace MipSdkFileApiDotNet
             CreateFileEngine(ClaimsPrincipal.Current.FindFirst(ClaimTypes.Upn).Value, "", "en-US");
         }
 
+        ~FileApi()
+        {
+            fileEngine = null;
+            fileProfile = null;
+            mipContext = null;
+        }
+
         /// <summary>
         /// Creates a new IFileProfile object and stores in private _fileProfile.
         /// </summary>
         private void CreateFileProfile()
         {
             try
-            {                
-                var profileSettings = new FileProfileSettings(mipPath, false, _authDelegate, new ConsentDelegateImplementation(), _appInfo, LogLevel.Trace);
-                _fileProfile = Task.Run(async () => await MIP.LoadFileProfileAsync(profileSettings)).Result;
+            {
+                mipContext = MIP.CreateMipContext(appInfo, mipPath, LogLevel.Error, null, null);
+                var profileSettings = new FileProfileSettings(mipContext, CacheStorageType.OnDisk, _authDelegate, new ConsentDelegateImplementation());
+                fileProfile = Task.Run(async () => await MIP.LoadFileProfileAsync(profileSettings)).Result;
             }
 
             catch (Exception ex)
@@ -113,7 +123,7 @@ namespace MipSdkFileApiDotNet
                    Identity = id
                 };
                 
-                _fileEngine = Task.Run(async () => await _fileProfile.AddEngineAsync(engineSettings)).Result;                
+                fileEngine = Task.Run(async () => await fileProfile.AddEngineAsync(engineSettings)).Result;                
             }
 
             catch (Exception ex)
@@ -135,9 +145,9 @@ namespace MipSdkFileApiDotNet
             try
             {
                 if (stream != null)
-                    handler = Task.Run(async () => await _fileEngine.CreateFileHandlerAsync(stream, fileName, true)).Result;
+                    handler = Task.Run(async () => await fileEngine.CreateFileHandlerAsync(stream, fileName, true)).Result;
                 else
-                    handler = Task.Run(async () => await _fileEngine.CreateFileHandlerAsync(fileName, fileName, true)).Result;
+                    handler = Task.Run(async () => await fileEngine.CreateFileHandlerAsync(fileName, fileName, true)).Result;
 
                 return handler;
             }
@@ -180,13 +190,12 @@ namespace MipSdkFileApiDotNet
                 LabelingOptions labelingOptions = new LabelingOptions()
                 {
                     JustificationMessage = justificationMessage,
-                    ActionSource = ActionSource.Manual,
                     AssignmentMethod = AssignmentMethod.Standard,
                     ExtendedProperties = new List<KeyValuePair<string, string>>()
                 };
 
                 // Set the label on the input stream or file.
-                handler.SetLabel(labelId, labelingOptions);
+                handler.SetLabel(fileEngine.GetLabelById(labelId), labelingOptions, new ProtectionSettings());
 
                 // Call CommitAsync to write result to output stream. 
                 // Returns a bool to indicate true or false.
@@ -216,7 +225,7 @@ namespace MipSdkFileApiDotNet
         {
             try
             {
-                var labels = _fileEngine.SensitivityLabels;
+                var labels = fileEngine.SensitivityLabels;
                 var returnLabels = new List<Models.Label>();
 
                 foreach (var label in labels)

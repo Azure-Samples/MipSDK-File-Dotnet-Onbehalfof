@@ -48,6 +48,8 @@ namespace MipSdkFileApiDotNet
         private static string tenantId = ConfigurationManager.AppSettings["ida:TenantId"];
         private static string postLogoutRedirectUri = ConfigurationManager.AppSettings["ida:PostLogoutRedirectUri"];        
         private static string thumbprint = ConfigurationManager.AppSettings["ida:Thumbprint"];
+        private static readonly bool doCertAuth = Convert.ToBoolean(ConfigurationManager.AppSettings["ida:DoCertAuth"]);
+        private static readonly string clientSecret = ConfigurationManager.AppSettings["ida:ClientSecret"];
 
         private string authority = aadInstance + tenantId;
         // This is the resource ID of the AAD Graph API.  We'll need this to request a token to call the Graph API.
@@ -59,37 +61,76 @@ namespace MipSdkFileApiDotNet
 
             app.UseCookieAuthentication(new CookieAuthenticationOptions());
 
-            app.UseOpenIdConnectAuthentication(
-                new OpenIdConnectAuthenticationOptions
-                {
-                    ClientId = clientId,
-                    Authority = authority,
-                    TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+            if (doCertAuth)
+            {
+                app.UseOpenIdConnectAuthentication(
+                    new OpenIdConnectAuthenticationOptions
                     {
-                        SaveSigninToken = true
-                    },
-                    PostLogoutRedirectUri = postLogoutRedirectUri,
-                    Notifications = new OpenIdConnectAuthenticationNotifications()
-                    {
-                        //
-                        // If there is a code in the OpenID Connect response, redeem it for an access token and refresh token, and store those away.
-                        //
-                        AuthorizationCodeReceived = (context) =>
+                        ClientId = clientId,
+                        Authority = authority,
+                        TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
                         {
-                            var code = context.Code;                            
-                            string signedInUserID = context.AuthenticationTicket.Identity.FindFirst(ClaimTypes.NameIdentifier).Value;
-                            AuthenticationContext authContext = new AuthenticationContext(authority, new TokenCache());
-                            X509Certificate2 cert = Utilities.ReadCertificateFromStore(thumbprint);
-                            ClientAssertionCertificate certCred = new ClientAssertionCertificate(clientId, cert);
-                                                       
-                            AuthenticationResult result = authContext.AcquireTokenByAuthorizationCodeAsync(
-                                code, new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)), certCred, graphResourceId).Result;
-                             
-                            return Task.FromResult(0);
+                            SaveSigninToken = true
+                        },
+                        PostLogoutRedirectUri = postLogoutRedirectUri,
+                        Notifications = new OpenIdConnectAuthenticationNotifications()
+                        {
+                            //
+                            // If there is a code in the OpenID Connect response, redeem it for an access token and refresh token, and store those away.
+                            //
+                            AuthorizationCodeReceived = (context) =>
+                                {
+                                    var code = context.Code;
+                                    string signedInUserID = context.AuthenticationTicket.Identity.FindFirst(ClaimTypes.NameIdentifier).Value;
+                                    AuthenticationContext authContext = new AuthenticationContext(authority, new TokenCache());
+                                    X509Certificate2 cert = Utilities.ReadCertificateFromStore(thumbprint);
+                                    ClientAssertionCertificate certCred = new ClientAssertionCertificate(clientId, cert);
+
+                                    AuthenticationResult result = authContext.AcquireTokenByAuthorizationCodeAsync(
+                                        code, new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)), certCred, graphResourceId).Result;
+
+                                    return Task.FromResult(0);
+                                }
                         }
                     }
-                }
-                );
+                    );
+            }
+
+            else
+            {
+                app.UseOpenIdConnectAuthentication(
+                    new OpenIdConnectAuthenticationOptions
+                    {
+                        ClientId = clientId,
+                        Authority = authority,
+                        TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+                        {
+                            SaveSigninToken = true
+                        },
+                        PostLogoutRedirectUri = postLogoutRedirectUri,
+                        Notifications = new OpenIdConnectAuthenticationNotifications()
+                        {
+                            //
+                            // If there is a code in the OpenID Connect response, redeem it for an access token and refresh token, and store those away.
+                            //
+                            AuthorizationCodeReceived = (context) =>
+                            {
+                                var code = context.Code;
+                                string signedInUserID = context.AuthenticationTicket.Identity.FindFirst(ClaimTypes.NameIdentifier).Value;
+                                AuthenticationContext authContext = new AuthenticationContext(authority, new TokenCache());
+                                ClientCredential clientCred = new ClientCredential(clientId, clientSecret);
+
+                                AuthenticationResult result = authContext.AcquireTokenByAuthorizationCodeAsync(code,
+                                    new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)),
+                                    clientCred,
+                                    graphResourceId).Result;
+
+                                return Task.FromResult(0);
+                            }
+                        }
+                    }
+                    );
+            }
 
             // This makes any middleware defined above this line run before the Authorization rule is applied in web.config.
             app.UseStageMarker(PipelineStage.Authenticate);
