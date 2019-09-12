@@ -1,10 +1,12 @@
 ---
-services: microsoft-information-protection
-platforms: csharp
-author: tommoser
-level: 300
-client: ASP.NET
-service: Microsoft Information Protection
+page_type: sample
+languages:
+- javascript
+- csharp
+products:
+- azure
+description: "This sample is intended to demonstrate the ease of integrating the MIP SDK with custom applications, as well to demonstrate the experience one might find in a line-of-business or SaaS application."
+urlFragment: mipsdk-fileapi-dotnet-onbehalfof
 ---
 
 # Using MIP SDK with ASP.NET to Label Files on Download
