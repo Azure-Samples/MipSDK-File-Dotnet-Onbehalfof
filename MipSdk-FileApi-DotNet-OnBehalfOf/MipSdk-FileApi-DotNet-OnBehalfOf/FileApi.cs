@@ -96,7 +96,7 @@ namespace MipSdkFileApiDotNet
             try
             {
                 mipContext = MIP.CreateMipContext(appInfo, mipPath, LogLevel.Error, null, null);
-                var profileSettings = new FileProfileSettings(mipContext, CacheStorageType.OnDisk, _authDelegate, new ConsentDelegateImplementation());
+                var profileSettings = new FileProfileSettings(mipContext, CacheStorageType.OnDisk, new ConsentDelegateImplementation());
                 fileProfile = Task.Run(async () => await MIP.LoadFileProfileAsync(profileSettings)).Result;
             }
 
@@ -118,7 +118,7 @@ namespace MipSdkFileApiDotNet
             try
             {
                 Identity id = new Identity(username);
-                var engineSettings = new FileEngineSettings(username, clientData, locale)
+                var engineSettings = new FileEngineSettings(username, _authDelegate, clientData, locale)
                 {
                    Identity = id
                 };
