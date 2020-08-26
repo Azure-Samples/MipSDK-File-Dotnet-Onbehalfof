@@ -10,16 +10,32 @@
 
     <div class="wrapper">        
         <div class="box b">
-            <asp:TreeView ID="treeViewLabels" runat="server" ShowLines="True" Width=200 Height=300  ExpandDepth="FullyExpand" SelectedNodeStyle-BackColor="White" SelectedNodeStyle-ForeColor="Black" OnSelectedNodeChanged="TreeViewLabels_SelectedNodeChanged" ></asp:TreeView>
+            <asp:TreeView ID="treeViewLabels" runat="server" Width=200px Height=300px SelectedNodeStyle-BackColor="White" SelectedNodeStyle-ForeColor="Black" OnSelectedNodeChanged="TreeViewLabels_SelectedNodeChanged" Font-Bold="True" ForeColor="White" ImageSet="Arrows" >
+                <HoverNodeStyle Font-Underline="True" ForeColor="#5555DD" />
+                <NodeStyle Font-Names="Tahoma" Font-Size="10pt" ForeColor="Black" HorizontalPadding="5px" NodeSpacing="0px" VerticalPadding="0px" />
+                <ParentNodeStyle Font-Bold="False" />
+<SelectedNodeStyle ForeColor="#5555DD" Font-Underline="True" HorizontalPadding="0px" VerticalPadding="0px"></SelectedNodeStyle>
+            </asp:TreeView>
         </div>
         <div class="box c">
-            <asp:Button ID="ButtonDownload" runat="server" Text="Download!"  BackColor="Black" ForeColor="Red" OnClick="ButtonDownload_Click"  />
+            <asp:Button ID="ButtonDownload" runat="server" Text="Download!"  BackColor="Lime" ForeColor="Black" OnClick="ButtonDownload_Click" Font-Bold="True" Font-Size="Large" Height="52px" Width="160px"  />
         </div>
         <div class="box d">
-            <asp:Label ID="labelSelectedLabel" runat="server" Text="null"></asp:Label>
+            <asp:Label ID="labelSelectedLabel" runat="server" Text="null" Font-Bold="True" Font-Size="X-Large"></asp:Label>
         </div>
         <div class="box a">
-             <asp:GridView ID="gridViewData" runat="server" Width="1000" Height="219px" AllowPaging="True" AllowCustomPaging="True"  AutoGenerateColumns="true" PageSize="20">
+             <asp:GridView ID="gridViewData" runat="server" Width="1000px" Height="219px" AllowPaging="True" AllowCustomPaging="True" PageSize="20" AlternatingRowStyle-ForeColor="Black" AlternatingRowStyle-BackColor="LightBlue" size CellPadding="4" ForeColor="#333333" GridLines="None">
+<AlternatingRowStyle BackColor="White"></AlternatingRowStyle>
+                 <EditRowStyle BackColor="#2461BF" />
+                 <FooterStyle BackColor="#507CD1" Font-Bold="True" ForeColor="White" />
+                 <HeaderStyle BackColor="#507CD1" Font-Bold="True" ForeColor="White" />
+                 <PagerStyle BackColor="#2461BF" ForeColor="White" HorizontalAlign="Center" />
+                 <RowStyle BackColor="#EFF3FB" />
+                 <SelectedRowStyle BackColor="#D1DDF1" Font-Bold="True" ForeColor="#333333" />
+                 <SortedAscendingCellStyle BackColor="#F5F7FB" />
+                 <SortedAscendingHeaderStyle BackColor="#6D95E1" />
+                 <SortedDescendingCellStyle BackColor="#E9EBEF" />
+                 <SortedDescendingHeaderStyle BackColor="#4870BE" />
              </asp:GridView>
         </div>
     </div>

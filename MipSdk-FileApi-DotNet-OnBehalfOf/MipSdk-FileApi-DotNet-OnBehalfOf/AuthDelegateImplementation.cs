@@ -22,12 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Identity.Client;
 using Microsoft.InformationProtection;
 using MipSdkFileApiDotNet.Models;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Information;
@@ -64,41 +65,46 @@ namespace MipSdkFileApiDotNet
 
         public async Task<string> GetAccessTokenOnBehalfOfUser(string authority, string resource)
         {
-            AuthenticationResult result = null;
-             
+            IConfidentialClientApplication _app;
+
+            AuthenticationResult result;
+
             if (doCertAuth)
             {
                 // Read X509 cert from local store and build ClientAssertionCertificate.
                 X509Certificate2 cert = Utilities.ReadCertificateFromStore(thumbprint);
-                ClientAssertionCertificate certCred = new ClientAssertionCertificate(clientId, cert);
-
-                // Store the claims identity, then read the BootstrapContext (JWT) from the identity.
-                var ci = (ClaimsIdentity)_claimsPrincipal.Identity;
-                string userAccessToken = (string)ci.BootstrapContext;
-
-                // Read the UserPrincipalName from the claim, then generate a user assertion with the UPN and access token.
-                string userName = _claimsPrincipal.FindFirst(ClaimTypes.Upn).Value;
-                UserAssertion userAssertion = new UserAssertion(userAccessToken, "urn:ietf:params:oauth:grant-type:jwt-bearer", userName);
-
-                // Build a new AuthContext, then use the certificate credentials + the user assertion to acquire a token for the provided resource. 
-                var authContext = new Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(authority, new TokenCache());
-                result = await authContext.AcquireTokenAsync(resource, certCred, userAssertion);
+                
+                // Create confidential client using certificate.
+                _app = ConfidentialClientApplicationBuilder.Create(clientId)
+                                                .WithRedirectUri(resource)
+                                                .WithAuthority(authority)
+                                                .WithCertificate(cert)
+                                                .Build();                               
             }
 
             else
             {
-                var ci = (ClaimsIdentity)_claimsPrincipal.Identity;
-                string userAccessToken = (string)ci.BootstrapContext;
-
-                ClientCredential clientCred = new ClientCredential(clientId, clientSecret);
-
-                // Read the UserPrincipalName from the claim, then generate a user assertion with the UPN and access token.
-                string userName = _claimsPrincipal.FindFirst(ClaimTypes.Upn).Value;
-                UserAssertion userAssertion = new UserAssertion(userAccessToken, "urn:ietf:params:oauth:grant-type:jwt-bearer", userName);
-                var authContext = new AuthenticationContext(authority, new TokenCache());
-                result = await authContext.AcquireTokenAsync(resource, clientCred, userAssertion);
+                // Create confidential client using client secret.
+                _app = ConfidentialClientApplicationBuilder.Create(clientId)
+                                               .WithRedirectUri(resource)
+                                               .WithAuthority(authority)
+                                               .WithClientSecret(clientSecret)
+                                               .Build();                                
             }
 
+            // Store user access token of authenticated user.
+            var ci = (ClaimsIdentity)_claimsPrincipal.Identity;
+            string userAccessToken = (string)ci.BootstrapContext;
+
+
+            // Generate a user assertion with the UPN and access token.            
+            UserAssertion userAssertion = new UserAssertion(userAccessToken, "urn:ietf:params:oauth:grant-type:jwt-bearer");
+
+            // Append .default to the resource passed in to AcquireToken().
+            List<string> scopes = new List<string>() { resource[resource.Length - 1].Equals('/') ? $"{resource}.default" : $"{resource}/.default" };
+
+            result = await _app.AcquireTokenOnBehalfOf(scopes, userAssertion)
+              .ExecuteAsync();              
 
             // Return the token to the API caller
             return (result.AccessToken);

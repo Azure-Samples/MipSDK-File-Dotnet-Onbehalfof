@@ -27,7 +27,7 @@ textarea {
 }
 
 .box {
-    background-color: #444;
+    background-color: #808080;
     color: #fff;
     border-radius: 5px;
     padding: 20px;
@@ -37,16 +37,19 @@ textarea {
 .a {
     grid-column: 1 / 3;
     grid-row: 2;
+    background-color: lightgray
 }
 
 .b {
     grid-column: 3;
     grid-row: 1 / 3;
+    background-color: lightgray
 }
 
 .c {
     grid-column: 1;
     grid-row: 1;
+    background-color: lightgray
 }
 
 .d {

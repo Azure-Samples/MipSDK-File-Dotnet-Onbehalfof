@@ -63,50 +63,27 @@ To enable the ASP.NET application to authenticate to Azure AD on behalf of the u
 - Update the App Registration settings to allow access to the **Azure RMS** and **Microsoft Information Protection Sync Service** APIs
 - Update the App Registration to accept certificate-based authentication
 
-### Create Self-Signed Certificate
-
-Authentication against the policy service using a service principal requires certificate based authentication. For this sample, we'll use PowerShell to generate the self-signed certificate, then export that to a text file.
-
-1. Launch PowerShell
-2. Create the certificate and export the credential information to a text file:
-
-```powershell
-mkdir c:\temp
-cd c:\temp
-
-#Generate the certificate
-$cert = New-SelfSignedCertificate -Subject "CN=MipSdkFileApiDotNet" -CertStoreLocation "Cert:\CurrentUser\My"  -KeyExportPolicy Exportable -KeySpec Signature
-
-# Export certificate details
-$bin = $cert.RawData
-$base64Value = [System.Convert]::ToBase64String($bin)
-$bin = $cert.GetCertHash()
-$base64Thumbprint = [System.Convert]::ToBase64String($bin)
-$keyid = [System.Guid]::NewGuid().ToString()
-$jsonObj = @{customKeyIdentifier=$base64Thumbprint;keyId=$keyid;type="AsymmetricX509Cert";usage="Verify";value=$base64Value}
-$keyCredentials=ConvertTo-Json @($jsonObj) | Out-File "keyCredentials.txt"
-$cert.Thumbprint
-```
-
-Copy the displayed thumbprint for future use. Keep **keyCredentials.txt** as the contents are required for a later step.
-
 ### App Registration
 
 To allow clients to authenticate against the web application, as well as to enable the web application to connect on behalf of clients, a new application registration must be configured in the **Azure AD management portal**.
 
-#### Creating the App Registration
+### Create an Azure AD App Registration
 
-To enable authentication for users against AAD and to permit the application to authenticate on behalf of users to the backend services, an application registration must be created in Azure AD.
+Authentication against the Azure AD tenant requires creating a native application registration. The client ID created in this step is used in a later step to generate an OAuth2 token.
 
-1. Go to https://portal.azure.com and log in as a global admin
+> Skip this step if you've already created a registration for previous sample. You may continue to use that client ID.
+
+1. Go to https://portal.azure.com and log in as a global admin.
+> Your tenant may permit standard users to register applications. If you aren't a global admin, you can attempt these steps, but may need to work with a tenant administrator to have an application registered or be granted access to register applications.
 2. Click Azure Active Directory, then **App Registrations** in the menu blade.
-3. Click **View all applications**
-4. Click **New Applications Registration**
-5. For name, enter **MipSdkFileApiDotNet**
-6. Leave **Application Type** as **Web app / API**
-7. For Sign-on URL, enter **https://localhost:44376**
-  > Note: If you updated the project settings, this may change.
-8. Click **Create**
+3. Click **New Registration**
+4. Under *Supported account types* select **Accounts in this directory only**
+5. Under *Redirect URI* select **Public client**
+6. For *Redirect URI*, enter **mipsdk-auth-sample://authorize**   
+  > Note: This can be anything you'd like.
+8. Click **Register**
+
+The registered app should now be displayed.
 
 The **Registered app** blade should now be displayed.
 
@@ -124,33 +101,85 @@ The **Registered app** blade should now be displayed.
 12. Click **Select** then **Done**
 13. In the **Required Permissions** blade, click **Grant Permissions** and confirm.
 
-#### Add the certificate credentials to the Azure AD Application
-
-1. In **Azure Active Directory** under **App Registrations**, find the **MipSdkFileApiDotNet** application. Click **Manifest** then **Edit** in the Manifest Editor.
-1. Find **keyCredentials** in the manifest. By default, it should be similar to this:
-
-```json
-  "keyCredentials": [],
-```
-
-1. Remove the existing brackets and replace with the contents of the text file generated in the [certificate generation step](#create-self-signed-certificate).  
+1. Remove the existing brackets and replace with the contents of the text file generated in the [certificate generation step](#create-self-signed-certificate).
 > **Important**: Don't forget the trailing comma.
 2. Click **Save**
 
-When complete, the section should be similar to this:
+### Add API Permissions
 
-```json
- "keyCredentials": [
-    [
-        {
-        "keyId":  "470980fd-2973-43e8-9d7d-254e073f55df",
-        "value":  "This will be the public key data",
-        "type":  "AsymmetricX509Cert",
-        "usage":  "Verify",
-        "customKeyIdentifier":  "This will be the custom key ID"
-        }
-    ],
+1. Select **API permissions**.
+2. Select **Add a permission**.
+3. Select **Microsoft APIs**.
+4. Select **Azure Rights Management Services**.
+5. Select **Application permissions**.
+6. Under **Select Permissions** select **Content.DelegatedWriter** and **Content.Writer**.
+7. Select **Delegated Permissions** and then **user_impersonation**.
+8. Select **Add permissions**.
+9. Again, Select **Add a permission**.
+10. Select **APIs my organization uses**.
+11. In the search box, type **Microsoft Information Protection Sync Service** then select the service.
+12. Select **Application permissions**.
+13. Check **UnifiedPolicy.Tenant.Read**.
+14. Select **Delegated permissions**.
+15. Check **UnifiedPolicy.User.Read**.
+16. Select **Add permissions**.
+17. In the **API permissions** blade, Select **Grant admin consent for <Your Tenant>** and confirm.
+
+### Set Redirect URI and Implicit Grant
+
+1. Select **Authentication**.
+2. Select **Add a platform**.
+3. Select **Web**
+4. Enter **https://localhost:44376/**
+5. Select **configure**. 
+6. Check **ID Tokens** under the *Implicit grant* section. 
+7. Save changes.
+
+### Generate a client secret
+
+If you'd prefer to use certificate based auth, skip ahead to [Generate a client certificate](#Generate-a-client-certificate).
+
+1. In the Azure AD application regisration menu, find the application you registered.
+2. Select **Certificates and secrets**.
+3. Click **New client secret**.
+4. For the description, enter "MIP SDK Test App".
+5. Select **In 1 year** for expiration
+  > This can be 1 year, 2 years, or never.
+6. Click **Add**.
+
+The secret will be displayed in the portal. **Copy the secret now, as it will disappear after page refresh.**
+
+  > Storing client secrets in plaintext isn't a best practice
+
+### Generate a client certificate
+
+This step generates a self-signed certificate, writes the thumbprint to the console, then exports the certificate to a cert file. If you used a [client secret](#Generate-a-client-secret), skip ahead to [update application configuration settings](#Update-application-configuration-settings).
+
+Run the following PowerShell script:
+
+```powershell
+mkdir c:\temp
+cd c:\temp
+
+#Generate the certificate
+$cert = New-SelfSignedCertificate -Subject "CN=MipSdkFileApiDotNet" -CertStoreLocation "Cert:\CurrentUser\My"  -KeyExportPolicy Exportable -KeySpec Signature
+$cert.Thumbprint
+$certFile = (Get-ChildItem -Path Cert:\CurrentUser\my\$($cert.thumbprint))
+Export-Certificate -cert $cert -FilePath cba.cer -Type:CERT
+
+# take the CER file and upload to AAD App Registration portal
 ```
+
+### Import the certificate to the application registration
+
+In this step, the public certificate generated in the previous section will be imported to the application registration.
+
+1. In the Azure AD application regisration menu, find the application you registered.
+2. Select **Certificates and secrets**
+3. Click **Upload certificate**
+4. Browse to the CER file generated in the previous section, then click **Add**
+
+The certificate will appear in the list, displaying the thumbprint and validity period.
 
 ### Install Additional NuGet Packages
 
@@ -159,17 +188,6 @@ The required NuGet packages must be restored. To restore the packages:
 1. Right-click the **MipSdkFileApiDotNet** project
 2. Go to **Manage NuGet Packages**
 3. A yellow banner will indicate that NuGet packages are missing. Click **Restore** to fetch the missing packages.
-
-If this fails, attempt to install the required packages by clicking the **Package Manager Console** tab at the bottom of VS2017 and run the following:
-
-```powershell
-Install-Package Microsoft.IdentityModel.Clients.ActiveDirectory
-Install-Package Microsoft.IdentityModel.Protocols.WsFederation
-Install-Package Microsoft.Owin.Security.Cookies
-Install-Package Microsoft.Owin.Security.OpenIdConnect
-Install-Package EPPlus
-Install-Package Newtonsoft.Json
-```
 
 ### Update Web.Config
 
@@ -184,17 +202,16 @@ The web.config file must be updated to store several identity and application-sp
 
 > Ensure that the certificate name matches the name [used above](#create-self-signed-certificate)
 
-| Key                       | Value or Value Location                                                                                       |
-|---------------------------|---------------------------------------------------------------------------------------------------------------|
-| **ida:ClientId**              | Azure AD App Registration Portal - [Detailed here](#app-registration): Copy the Application ID                                                                            |
-| **ida:AADInstance**           | https://login.microsoftonline.com                                                                             |
-| **ida:Domain**               | Domain of AAD Tenant - e.g. Contoso.Onmicrosoft.com                                                                                         |
+| Key                           | Value or Value Location                                                                                                      |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **ida:ClientId**              | Azure AD App Registration Portal - [Detailed here](#app-registration): Copy the Application ID                               |
+| **ida:AADInstance**           | https://login.microsoftonline.com                                                                                            |
+| **ida:Domain**                | Domain of AAD Tenant - e.g. Contoso.Onmicrosoft.com                                                                          |
 | **ida:TenantId**              | [AAD Properties Blade](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/Properties) - Directory ID |
-| **ida:PostLogoutRedirectUri** | Set to site root (https://localhost:44376 in sample), and set in **App Registration->Settings->Logout URL**                                                        |
-| **ida:CertName**              | CN=MipSdkFileApiDotNetCert                                                                                           |
-| **ida:Thumbprint**           | Thumbprint of the certificate generated above.
-| **MipData**                   | App_Data\mip_data                                                                                             |
-| **DataEndpoint**              | Any public web service to load data for GridView.                                                             |
+| **ida:PostLogoutRedirectUri** | Set to site root (https://localhost:44376 in sample), and set in **App Registration->Settings->Logout URL**                  |
+| **ida:Thumbprint**            | Thumbprint of the certificate generated above.                                                                               |
+| **MipData**                   | App_Data\mip_data                                                                                                            |
+| **DataEndpoint**              | Any public web service to load data for GridView.                                                                            |
 
 #### Update IdentityConfiguration
 
@@ -229,7 +246,7 @@ The sample leverages ADAL as part of the ASP.NET application. Specifically, the 
 
 The `IAuthDelegate` is passed to the `IFileProfile` at creation. When adding an engine for a specific user, `IAuthDelegate.AcquireToken()` is called, and should accept `Identity`, the authority URL, and the resource URL, in string format, as parameters. The API will pass this values to the method.
 
-> The `IAuthDelegate` provides flexibility in that it allows the developer to implement **any OAuth2 token acquisition library** to meet their needs. In this sample `Microsoft.IdentityModel.Clients.ActiveDirectory` is used, but 3rd party libraries, or even hard-coding a token, would work as far as the MIP SDK is concerned. It only expects that it will pass in some parameters to `AcquireToken` and get back an OAuth2 token in string format. The token issuer and audience should match the authority and resource provided as input.
+> The `IAuthDelegate` provides flexibility in that it allows the developer to implement **any OAuth2 token acquisition library** to meet their needs. In this sample the Microsoft Authentication Library (MSAL) is used, but 3rd party libraries, or even hard-coding a token, would work as far as the MIP SDK is concerned. It only expects that it will pass in some parameters to `AcquireToken` and get back an OAuth2 token in string format. The token issuer and audience should match the authority and resource provided as input.
 
 ## Custom Objects
 
@@ -247,7 +264,7 @@ The MIP SDK File API functionality has been implemented in a class called `FileA
 For the purposes of the tutorial, the samples will implement five methods, plus a constructor.
 
 | Method              | Purpose                                                                                       |
-|---------------------|-----------------------------------------------------------------------------------------------|
+| ------------------- | --------------------------------------------------------------------------------------------- |
 | Constructor         | Set ApplicationInfo, Initialize MIP SDK managed components, create profile and engine.        |
 | CreateFileProfile() | Create a new `Microsoft.InformationProtection.File.IFileProfile` object.                      |
 | CreateFileEngine()  | Add a new `Microsoft.InformationProtection.File.IFileEngine` to the `IFileProject` object.    |
