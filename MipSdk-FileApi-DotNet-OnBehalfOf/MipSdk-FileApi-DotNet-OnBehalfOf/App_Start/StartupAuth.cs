@@ -29,14 +29,15 @@ using System.IdentityModel.Claims;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
+
 using Microsoft.Owin.Extensions;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OpenIdConnect;
 using Owin;
-using MipSdkFileApiDotNet.Models;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.Identity.Client;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace MipSdkFileApiDotNet
 {
@@ -49,8 +50,8 @@ namespace MipSdkFileApiDotNet
         private static string postLogoutRedirectUri = ConfigurationManager.AppSettings["ida:PostLogoutRedirectUri"];        
         private static string thumbprint = ConfigurationManager.AppSettings["ida:Thumbprint"];
         private static readonly bool doCertAuth = Convert.ToBoolean(ConfigurationManager.AppSettings["ida:DoCertAuth"]);
-        private static readonly string clientSecret = ConfigurationManager.AppSettings["ida:ClientSecret"];
-
+        private static readonly string clientSecret = ConfigurationManager.AppSettings["ida:ClientSecret"];        
+        
         private string authority = aadInstance + tenantId;
         // This is the resource ID of the AAD Graph API.  We'll need this to request a token to call the Graph API.
         private static string graphResourceId = "https://graph.windows.net";
@@ -60,6 +61,8 @@ namespace MipSdkFileApiDotNet
             app.SetDefaultSignInAsAuthenticationType(CookieAuthenticationDefaults.AuthenticationType);
 
             app.UseCookieAuthentication(new CookieAuthenticationOptions());
+
+            IConfidentialClientApplication _app;
 
             if (doCertAuth)
             {
@@ -82,13 +85,26 @@ namespace MipSdkFileApiDotNet
                                 {
                                     var code = context.Code;
                                     string signedInUserID = context.AuthenticationTicket.Identity.FindFirst(ClaimTypes.NameIdentifier).Value;
-                                    AuthenticationContext authContext = new AuthenticationContext(authority, new TokenCache());
-                                    X509Certificate2 cert = Utilities.ReadCertificateFromStore(thumbprint);
-                                    ClientAssertionCertificate certCred = new ClientAssertionCertificate(clientId, cert);
 
-                                    AuthenticationResult result = authContext.AcquireTokenByAuthorizationCodeAsync(
-                                        code, new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)), certCred, graphResourceId).Result;
+                                    var request = HttpContext.Current.Request;
+                                    var currentUri = "https://localhost:44376/";
 
+                                    _app = ConfidentialClientApplicationBuilder.Create(clientId)
+                                                .WithRedirectUri(currentUri)
+                                                .WithAuthority(authority)
+                                                .WithCertificate(Utilities.ReadCertificateFromStore(thumbprint))
+                                                .Build();
+
+                                    var resource = clientId;                                    
+
+                                     // Append .default to the resource passed in to AcquireToken().
+                                    List<string> scopes = new List<string>() { resource[resource.Length - 1].Equals('/') ? $"{resource}.default" : $"{resource}/.default" };
+
+                                    _app.AcquireTokenByAuthorizationCode(scopes, code)
+                                        .ExecuteAsync()
+                                        .GetAwaiter()
+                                        .GetResult();
+                                                                                                            
                                     return Task.FromResult(0);
                                 }
                         }
@@ -117,13 +133,26 @@ namespace MipSdkFileApiDotNet
                             {
                                 var code = context.Code;
                                 string signedInUserID = context.AuthenticationTicket.Identity.FindFirst(ClaimTypes.NameIdentifier).Value;
-                                AuthenticationContext authContext = new AuthenticationContext(authority, new TokenCache());
-                                ClientCredential clientCred = new ClientCredential(clientId, clientSecret);
 
-                                AuthenticationResult result = authContext.AcquireTokenByAuthorizationCodeAsync(code,
-                                    new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)),
-                                    clientCred,
-                                    graphResourceId).Result;
+                                var currentUri = "https://localhost:44376/";
+
+                                _app = ConfidentialClientApplicationBuilder.Create(clientId)
+                                            .WithRedirectUri(currentUri)
+                                            .WithAuthority(authority)
+                                            .WithClientSecret(clientSecret)
+                                            .Build();
+
+
+                                var resource = "8e05f8b4-5efd-429f-9e24-746bf302840c";
+                                //new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)).ToString();
+
+                                // Append .default to the resource passed in to AcquireToken().
+                                List<string> scopes = new List<string>() { resource[resource.Length - 1].Equals('/') ? $"{resource}.default" : $"{resource}/.default" };
+
+                                _app.AcquireTokenByAuthorizationCode(scopes, code)
+                                    .ExecuteAsync()
+                                    .GetAwaiter()
+                                    .GetResult();
 
                                 return Task.FromResult(0);
                             }
