@@ -140,10 +140,7 @@ namespace MipSdkFileApiDotNet
                                             .WithClientSecret(clientSecret)
                                             .Build();
 
-
-                                //var resource = "05b09aff-019f-4eff-9076-9ec580da4a97";
-                                //new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)).ToString();
-
+                           
                                 // Append .default to the resource passed in to AcquireToken().
                                 List<string> scopes = new List<string>() { clientId[clientId.Length - 1].Equals('/') ? $"{clientId}.default" : $"{clientId}/.default" };
 
