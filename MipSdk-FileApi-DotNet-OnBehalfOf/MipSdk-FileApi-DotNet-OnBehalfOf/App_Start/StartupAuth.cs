@@ -53,9 +53,7 @@ namespace MipSdkFileApiDotNet
         private static readonly string clientSecret = ConfigurationManager.AppSettings["ida:ClientSecret"];        
         
         private string authority = aadInstance + tenantId;
-        // This is the resource ID of the AAD Graph API.  We'll need this to request a token to call the Graph API.
-        private static string graphResourceId = "https://graph.windows.net";
-
+        
         public void ConfigureAuth(IAppBuilder app)
         {
             app.SetDefaultSignInAsAuthenticationType(CookieAuthenticationDefaults.AuthenticationType);
@@ -143,11 +141,11 @@ namespace MipSdkFileApiDotNet
                                             .Build();
 
 
-                                var resource = "8e05f8b4-5efd-429f-9e24-746bf302840c";
+                                //var resource = "05b09aff-019f-4eff-9076-9ec580da4a97";
                                 //new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)).ToString();
 
                                 // Append .default to the resource passed in to AcquireToken().
-                                List<string> scopes = new List<string>() { resource[resource.Length - 1].Equals('/') ? $"{resource}.default" : $"{resource}/.default" };
+                                List<string> scopes = new List<string>() { clientId[clientId.Length - 1].Equals('/') ? $"{clientId}.default" : $"{clientId}/.default" };
 
                                 _app.AcquireTokenByAuthorizationCode(scopes, code)
                                     .ExecuteAsync()
