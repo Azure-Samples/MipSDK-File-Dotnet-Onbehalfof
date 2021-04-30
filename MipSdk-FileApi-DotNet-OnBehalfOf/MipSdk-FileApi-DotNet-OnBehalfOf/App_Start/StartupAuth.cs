@@ -38,6 +38,7 @@ using Owin;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Identity.Client;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace MipSdkFileApiDotNet
 {
@@ -140,10 +141,9 @@ namespace MipSdkFileApiDotNet
                                             .WithClientSecret(clientSecret)
                                             .Build();
 
-                           
-                                // Append .default to the resource passed in to AcquireToken().
-                                List<string> scopes = new List<string>() { clientId[clientId.Length - 1].Equals('/') ? $"{clientId}.default" : $"{clientId}/.default" };
 
+                                // Append .default to the resource passed in to AcquireToken().                                
+                                List<string> scopes = new List<string>() { OpenIdConnectScope.OpenIdProfile };
                                 _app.AcquireTokenByAuthorizationCode(scopes, code)
                                     .ExecuteAsync()
                                     .GetAwaiter()
