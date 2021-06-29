@@ -85,45 +85,21 @@ Authentication against the Azure AD tenant requires creating a native applicatio
 
 The registered app should now be displayed.
 
-The **Registered app** blade should now be displayed.
-
-1. Click **Settings**
-2. Click **Required Permissions**
-3. Click **Add**
-4. Click **Select an API**
-5. Select **Microsoft Rights Management Services** and click **Select**
-6. Under **Select Permissions** select **Create and access protected content for users**, **Read protected content on behalf of a user**, and **Create protected content on behalf of a user**
-7. Click **Select** then **Done**
-8. Click **Add**
-9. Click **Select an API**
-10. In the search box, type **Microsoft Information Protection Sync Service** then select the service and click **Select**
-11. Under **Select Permissions** select **Read all unified policies a user has access to.**
-12. Click **Select** then **Done**
-13. In the **Required Permissions** blade, click **Grant Permissions** and confirm.
-
-1. Remove the existing brackets and replace with the contents of the text file generated in the [certificate generation step](#create-self-signed-certificate).
-> **Important**: Don't forget the trailing comma.
-2. Click **Save**
-
 ### Add API Permissions
 
 1. Select **API permissions**.
 2. Select **Add a permission**.
 3. Select **Microsoft APIs**.
 4. Select **Azure Rights Management Services**.
-5. Select **Application permissions**.
-6. Under **Select Permissions** select **Content.DelegatedWriter** and **Content.Writer**.
-7. Select **Delegated Permissions** and then **user_impersonation**.
-8. Select **Add permissions**.
-9. Again, Select **Add a permission**.
-10. Select **APIs my organization uses**.
-11. In the search box, type **Microsoft Information Protection Sync Service** then select the service.
-12. Select **Application permissions**.
-13. Check **UnifiedPolicy.Tenant.Read**.
-14. Select **Delegated permissions**.
-15. Check **UnifiedPolicy.User.Read**.
-16. Select **Add permissions**.
-17. In the **API permissions** blade, Select **Grant admin consent for <Your Tenant>** and confirm.
+5. Select **Delegated Permissions** and then **user_impersonation**.
+6. Select **Add permissions**.
+7. Again, Select **Add a permission**.
+8. Select **APIs my organization uses**.
+9. In the search box, type **Microsoft Information Protection Sync Service** then select the service.
+10. Select **Delegated permissions**.
+11. Check **UnifiedPolicy.User.Read**.
+12. Select **Add permissions**.
+13. In the **API permissions** blade, Select **Grant admin consent for <Your Tenant>** and confirm.
 
 ### Set Redirect URI and Implicit Grant
 
