@@ -95,7 +95,9 @@ namespace MipSdkFileApiDotNet
         {
             try
             {
-                mipContext = MIP.CreateMipContext(appInfo, mipPath, LogLevel.Error, null, null);
+                // Create MipConfiguration Object
+                MipConfiguration mipConfiguration = new MipConfiguration(appInfo, mipData, LogLevel.Trace, false);
+                mipContext = MIP.CreateMipContext(mipConfiguration);
                 var profileSettings = new FileProfileSettings(mipContext, CacheStorageType.OnDisk, new ConsentDelegateImplementation());
                 fileProfile = Task.Run(async () => await MIP.LoadFileProfileAsync(profileSettings)).Result;
             }
