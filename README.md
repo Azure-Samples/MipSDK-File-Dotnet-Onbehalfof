@@ -4,9 +4,10 @@ languages:
 - javascript
 - csharp
 products:
-- azure
+- m365
+- office-365
 description: "See the ease of integrating the MIP SDK with custom applications, as well as the experience in a line-of-business/SaaS application."
-urlFragment: mipsdk-fileapi-dotnet-onbehalfof
+urlFragment: MipSDK-File-Dotnet-Onbehalfof
 ---
 
 # Using MIP SDK with ASP.NET to Label Files on Download
@@ -17,7 +18,7 @@ This sample is intended to demonstrate the ease of integrating the MIP SDK with 
 
 The ASP.NET web application displays a set of data in a GridView then allows the user to select an MIP label. After selecting a label, the user may click Download to get a copy of the data in Excel format. The downloaded file will have the selected MIP label applied.
 
-Authentication in the sample is implemented via bearer token and an on-behalf-of flow, as detailed [here](https://github.com/Azure-Samples/active-directory-dotnet-webapi-onbehalfof).
+Authentication in the sample is implemented via bearer token and an on-behalf-of flow, as detailed [here](https://github.com/Azure-Samples/active-directory-dotnet-native-aspnetcore-v2/tree/master/2.%20Web%20API%20now%20calls%20Microsoft%20Graph).
 
 - Users authenticate to the ASP.NET web application
 - The application stores their JSON web token.
